@@ -12,21 +12,21 @@
             min-height: 100vh; display: flex; align-items: center; justify-content: center;
             padding: 20px; color: white;
         }
-      .container {
+        .container {
             background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
             border-radius: 20px; padding: 30px; max-width: 650px; width: 100%;
             border: 1px solid rgba(255,255,255,0.2);
         }
         h1 { text-align: center; margin-bottom: 10px; }
-      .subtitle { text-align: center; opacity: 0.8; margin-bottom: 30px; font-size: 14px; }
-      .upload-area {
+        .subtitle { text-align: center; opacity: 0.8; margin-bottom: 30px; font-size: 14px; }
+        .upload-area {
             border: 3px dashed rgba(255,255,255,0.3); border-radius: 15px; padding: 40px;
             text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 20px;
         }
-      .upload-area:hover { background: rgba(255,255,255,0.05); }
+        .upload-area:hover { background: rgba(255,255,255,0.05); }
         #imageInput { display: none; }
         #preview { max-width: 100%; border-radius: 10px; margin: 20px 0; display: none; }
-      .controls { display: none; margin-top: 20px; }
+        .controls { display: none; margin-top: 20px; }
         input, button, textarea {
             width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3);
@@ -37,114 +37,19 @@
             border: none; cursor: pointer; font-weight: bold;
         }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
-      .result { margin-top: 20px; text-align: center; }
-      .result video { max-width: 100%; border-radius: 10px; }
-      .loader { display: none; text-align: center; margin: 20px 0; }
-      .spinner {
+        .result { margin-top: 20px; text-align: center; }
+        .result video { max-width: 100%; border-radius: 10px; }
+        .loader { display: none; text-align: center; margin: 20px 0; }
+        .spinner {
             border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white;
             border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         label { display: block; margin-top: 15px; opacity: 0.9; font-size: 14px; }
         ::placeholder { color: rgba(255,255,255,0.5); }
+        .error { color: #ff6b6b; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; margin-top: 15px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎭 حرك الوشوش بـ AI حقيقي</h1>
-        <p class="subtitle">ارفع صورة شخص + نص وهيتكلم ويتحرك</p>
-        <label>مفتاح Replicate API:</label>
-        <input type="password" id="apiKey" placeholder="r8_xxxxxxxxxxxxxxxxxxxxx">
-        <div class="upload-area" onclick="document.getElementById('imageInput').click()">
-            <p style="font-size: 48px;">🖼️</p>
-            <p><strong>ارفع صورة وش واضحة</strong></p>
-            <p style="font-size: 12px; opacity: 0.7;">لازم وش بني آدم باصص للكاميرا</p>
-        </div>
-        <input type="file" id="imageInput" accept="image/*">
-        <img id="preview" alt="معاينة">
-        <div class="controls" id="controls">
-            <label>النص اللي عايز الشخص يقوله:</label>
-            <textarea id="speechText" rows="3" placeholder="اكتب هنا... مثال: أهلا بيك"></textarea>
-            <button id="generateBtn">حرك الوش دلوقتي 🚀</button>
-        </div>
-        <div class="loader" id="loader">
-            <div class="spinner"></div>
-            <p style="margin-top:15px;">جاري المعالجة... ده بياخد 1-3 دقايق</p>
-        </div>
-        <div class="result" id="result"></div>
-    </div>
-    <script>
-        const imageInput = document.getElementById('imageInput');
-        const preview = document.getElementById('preview');
-        const controls = document.getElementById('controls');
-        const generateBtn = document.getElementById('generateBtn');
-        const loader = document.getElementById('loader');
-        const result = document.getElementById('result');
-        const apiKeyInput = document.getElementById('apiKey');
-        let imageBase64 = '';
-        apiKeyInput.value = localStorage.getItem('replicateKey') || '';
-        apiKeyInput.addEventListener('change', () => {
-            localStorage.setItem('replicateKey', apiKeyInput.value);
-        });
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    controls.style.display = 'block';
-                    imageBase64 = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        generateBtn.addEventListener('click', async () => {
-            const apiKey = apiKeyInput.value.trim();
-            const text = document.getElementById('speechText').value.trim();
-            if (!apiKey) return alert('لازم تدخل مفتاح Replicate API الأول');
-            if (!imageBase64) return alert('ارفع صورة وش الأول');
-            if (!text) return alert('اكتب النص اللي عايزه يقوله');
-            loader.style.display = 'block'; result.innerHTML = ''; generateBtn.disabled = true;
-            try {
-                const startResponse = await fetch('https://api.replicate.com/v1/predictions', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Token ' + apiKey, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        version: "a5d2b8b3b8b8b8b8",
-                        input: {
-                            image: imageBase64,
-                            text: text
-                        }
-                    })
-                });
-                if (!startResponse.ok) throw new Error('المفتاح غلط أو الرصيد خلص');
-                const prediction = await startResponse.json();
-                let status = prediction.status;
-                let output = null;
-                while (status!== 'succeeded' && status!== 'failed') {
-                    await new Promise(r => setTimeout(r, 2000));
-                    const checkResponse = await fetch('https://api.replicate.com/v1/predictions/' + prediction.id, {
-                        headers: { 'Authorization': 'Token ' + apiKey }
-                    });
-                    const checkData = await checkResponse.json();
-                    status = checkData.status;
-                    output = checkData.output;
-                    if (status === 'failed') throw new Error('فشلت المعالجة - اتأكد ان الصورة فيها وش واضح');
-                }
-                loader.style.display = 'none';
-                result.innerHTML = `
-                    <h3>✅ خلص!</h3>
-                    <video controls autoplay loop><source src="${output}" type="video/mp4"></video>
-                    <br><br><a href="${output}" download><button>تحميل الفيديو 💾</button></a>
-                `;
-            } catch (error) {
-                loader.style.display = 'none';
-                result.innerHTML = `<p style="color:#ff6b6b;">❌ خطأ: ${error.message}</p>`;
-            } finally {
-                generateBtn.disabled = false;
-            }
-        });
-    </script>
-</body>
-</html>
+        <h1>🎭 حرك الوشوش
